@@ -1,0 +1,392 @@
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local VirtualInput = game:GetService("VirtualInputManager")
+
+local spamKey = Enum.KeyCode.E
+local activationKey = Enum.KeyCode.F2
+local spamActive = false
+local guiVisible = true
+local inSettings = false
+
+-- Farben (kräftiges, dunkles Violett)
+local violet1 = Color3.fromRGB(60, 55, 80)
+local violet2 = Color3.fromRGB(27, 24, 38)
+local violetLight = Color3.fromRGB(90, 80, 130) -- Helleres Violett für Card/Button
+local darkBG = Color3.fromRGB(27, 27, 27)
+local settingsBG = darkBG -- Settings Hintergrund jetzt wie Main UI
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BlinkerUI"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Main Window
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -60)
+MainFrame.BackgroundColor3 = darkBG
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 18)
+UICorner.Parent = MainFrame
+
+-- Header
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 32)
+Header.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Header.BorderSizePixel = 0
+Header.Parent = MainFrame
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 18)
+HeaderCorner.Parent = Header
+
+local HomeIcon = Instance.new("ImageLabel")
+HomeIcon.Size = UDim2.new(0, 16, 0, 16)
+HomeIcon.Position = UDim2.new(0, 12, 0, 8)
+HomeIcon.BackgroundTransparency = 1
+HomeIcon.Image = "rbxassetid://7733960981"
+HomeIcon.Parent = Header
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(0, 90, 0, 20)
+TitleLabel.Position = UDim2.new(0, 36, 0, 6)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Blinker"
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 15
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = Header
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 28, 0, 28)
+MinimizeBtn.Position = UDim2.new(1, -60, 0, 2)
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Text = "−" -- Unicode Minus (U+2212)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 18
+MinimizeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeBtn.Parent = Header
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -30, 0, 2)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "×" -- Unicode Multiplikationszeichen (U+00D7)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 20
+CloseBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+CloseBtn.Parent = Header
+
+-- Content
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, 0, 1, -32)
+ContentFrame.Position = UDim2.new(0, 0, 0, 32)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+-- Key Spammer Card (HELLER)
+local KeySpammerCard = Instance.new("Frame")
+KeySpammerCard.Size = UDim2.new(1, -24, 0, 68)
+KeySpammerCard.Position = UDim2.new(0, 12, 0, 10)
+KeySpammerCard.BackgroundColor3 = violetLight
+KeySpammerCard.BackgroundTransparency = 0.05
+KeySpammerCard.BorderSizePixel = 0
+KeySpammerCard.Parent = ContentFrame
+local KeySpammerCorner = Instance.new("UICorner")
+KeySpammerCorner.CornerRadius = UDim.new(0, 18)
+KeySpammerCorner.Parent = KeySpammerCard
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, violetLight),
+    ColorSequenceKeypoint.new(1, violet1)
+}
+gradient.Rotation = 90
+gradient.Parent = KeySpammerCard
+
+local KeySpammerTitle = Instance.new("TextLabel")
+KeySpammerTitle.Size = UDim2.new(1, -20, 0, 26)
+KeySpammerTitle.Position = UDim2.new(0, 12, 0, 8)
+KeySpammerTitle.BackgroundTransparency = 1
+KeySpammerTitle.Text = "–   Key Spammer" -- Unicode Gedankenstrich (U+2013)
+KeySpammerTitle.Font = Enum.Font.GothamBold
+KeySpammerTitle.TextSize = 18
+KeySpammerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeySpammerTitle.TextXAlignment = Enum.TextXAlignment.Left
+KeySpammerTitle.TextTransparency = 0
+KeySpammerTitle.Parent = KeySpammerCard
+
+local KeySpammerDesc = Instance.new("TextLabel")
+KeySpammerDesc.Size = UDim2.new(1, -20, 0, 18)
+KeySpammerDesc.Position = UDim2.new(0, 12, 0, 34)
+KeySpammerDesc.BackgroundTransparency = 1
+KeySpammerDesc.Text = "Configurable Keyboard Automation"
+KeySpammerDesc.Font = Enum.Font.Gotham
+KeySpammerDesc.TextSize = 14
+KeySpammerDesc.TextColor3 = Color3.fromRGB(230, 230, 240)
+KeySpammerDesc.TextXAlignment = Enum.TextXAlignment.Left
+KeySpammerDesc.TextTransparency = 0
+KeySpammerDesc.Parent = KeySpammerCard
+
+-- Settings UI
+local SettingsFrame = Instance.new("Frame")
+SettingsFrame.Size = UDim2.new(1, 0, 0, 200)
+SettingsFrame.Position = UDim2.new(0, 0, 0, 0)
+SettingsFrame.BackgroundColor3 = settingsBG -- jetzt identisch zum Main UI
+SettingsFrame.Visible = false
+SettingsFrame.Parent = MainFrame
+local SettingsCorner = Instance.new("UICorner")
+SettingsCorner.CornerRadius = UDim.new(0, 18)
+SettingsCorner.Parent = SettingsFrame
+
+-- Settings Header
+local SettingsHeader = Instance.new("Frame")
+SettingsHeader.Size = UDim2.new(1, -24, 0, 32)
+SettingsHeader.Position = UDim2.new(0, 12, 0, 10)
+SettingsHeader.BackgroundColor3 = violet2
+SettingsHeader.BackgroundTransparency = 0.7
+SettingsHeader.Parent = SettingsFrame
+local SettingsHeaderCorner = Instance.new("UICorner")
+SettingsHeaderCorner.CornerRadius = UDim.new(0, 18)
+SettingsHeaderCorner.Parent = SettingsHeader
+
+local SettingsHeaderGradient = gradient:Clone()
+SettingsHeaderGradient.Parent = SettingsHeader
+
+local SettingsTitle = Instance.new("TextLabel")
+SettingsTitle.Size = UDim2.new(0.7, 0, 1, 0)
+SettingsTitle.Position = UDim2.new(0, 12, 0, 0)
+SettingsTitle.BackgroundTransparency = 1
+SettingsTitle.Text = "Key Spammer Settings"
+SettingsTitle.Font = Enum.Font.GothamBold
+SettingsTitle.TextSize = 13
+SettingsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsTitle.TextXAlignment = Enum.TextXAlignment.Left
+SettingsTitle.TextTransparency = 0
+SettingsTitle.Parent = SettingsHeader
+
+local BackButton = Instance.new("TextButton")
+BackButton.Size = UDim2.new(0, 60, 0, 22)
+BackButton.Position = UDim2.new(1, -72, 0, 5)
+BackButton.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+BackButton.Text = "Back"
+BackButton.Font = Enum.Font.GothamBold
+BackButton.TextSize = 11
+BackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+BackButton.Parent = SettingsHeader
+local BackButtonCorner = Instance.new("UICorner")
+BackButtonCorner.CornerRadius = UDim.new(0, 12)
+BackButtonCorner.Parent = BackButton
+
+-- Settings Rows
+local function createSettingsRow(yPos, labelText)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -32, 0, 30)
+    row.Position = UDim2.new(0, 16, 0, yPos)
+    row.BackgroundTransparency = 1
+    row.Parent = SettingsFrame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.5, 0, 1, 0)
+    label.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    label.Text = "  "..labelText
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.BackgroundTransparency = 0
+    label.TextTransparency = 0
+    label.Parent = row
+    local labelCorner = Instance.new("UICorner")
+    labelCorner.CornerRadius = UDim.new(0, 12)
+    labelCorner.Parent = label
+    local labelBorder = Instance.new("UIStroke")
+    labelBorder.Color = Color3.fromRGB(80, 80, 100)
+    labelBorder.Thickness = 1
+    labelBorder.Parent = label
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 70, 1, 0)
+    btn.Position = UDim2.new(1, -70, 0, 0)
+    btn.BackgroundColor3 = violet2
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundTransparency = 0
+    btn.TextTransparency = 0
+    btn.Parent = row
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 12)
+    btnCorner.Parent = btn
+
+    return btn
+end
+
+local KeyChangeBtn = createSettingsRow(56, "Select key:")
+KeyChangeBtn.Text = spamKey.Name
+
+local ActivationChangeBtn = createSettingsRow(96, "Activation key:")
+ActivationChangeBtn.Text = activationKey.Name
+
+local ToggleBtn = createSettingsRow(136, "Activate spammer:")
+ToggleBtn.Text = "OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+-- Drag function
+local dragging, dragStart, startPos
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    if MainFrame.Size.Y.Offset <= 40 then
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, inSettings and 200 or 120)}):Play()
+        MinimizeBtn.Text = "−"
+        wait(0.1)
+        ContentFrame.Visible = not inSettings
+        SettingsFrame.Visible = inSettings
+    else
+        ContentFrame.Visible = false
+        SettingsFrame.Visible = false
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 32)}):Play()
+        MinimizeBtn.Text = "+"
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+        {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 1})
+    closeTween:Play()
+    closeTween.Completed:Connect(function()
+        MainFrame.Visible = false
+        guiVisible = false
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Blinker hidden",
+            Text = "Press ALT-GR to reopen",
+            Duration = 5
+        })
+    end)
+end)
+
+UIS.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.RightAlt and not guiVisible then
+        MainFrame.Size = UDim2.new(0, 0, 0, 0)
+        MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+        MainFrame.BackgroundTransparency = 1
+        MainFrame.Visible = true
+        local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 320, 0, inSettings and 200 or 120), Position = UDim2.new(0.5, -160, 0.5, -70), BackgroundTransparency = 0})
+        openTween:Play()
+        openTween.Completed:Connect(function()
+            guiVisible = true
+            if inSettings then
+                SettingsFrame.Visible = true
+            else
+                ContentFrame.Visible = true
+            end
+            MinimizeBtn.Text = "−"
+        end)
+    end
+    if input.KeyCode == activationKey then
+        spamActive = not spamActive
+        updateSpammerStatus()
+    end
+end)
+
+KeySpammerCard.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        inSettings = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 200)}):Play()
+        ContentFrame.Visible = false
+        wait(0.25)
+        SettingsFrame.Visible = true
+    end
+end)
+
+BackButton.MouseButton1Click:Connect(function()
+    inSettings = false
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 120)}):Play()
+    SettingsFrame.Visible = false
+    wait(0.25)
+    ContentFrame.Visible = true
+end)
+
+function updateSpammerStatus()
+    if spamActive then
+        ToggleBtn.Text = "ON"
+        ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        ToggleBtn.Text = "OFF"
+        ToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end
+    KeyChangeBtn.Text = spamKey.Name
+    ActivationChangeBtn.Text = activationKey.Name
+end
+
+KeyChangeBtn.MouseButton1Click:Connect(function()
+    KeyChangeBtn.Text = "..."
+    local connection
+    connection = UIS.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            spamKey = input.KeyCode
+            KeyChangeBtn.Text = input.KeyCode.Name
+            connection:Disconnect()
+        end
+    end)
+end)
+
+ActivationChangeBtn.MouseButton1Click:Connect(function()
+    ActivationChangeBtn.Text = "..."
+    local connection
+    connection = UIS.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            activationKey = input.KeyCode
+            ActivationChangeBtn.Text = input.KeyCode.Name
+            connection:Disconnect()
+        end
+    end)
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    spamActive = not spamActive
+    updateSpammerStatus()
+end)
+
+spawn(function()
+    while true do
+        if spamActive then
+            VirtualInput:SendKeyEvent(true, spamKey, false, game)
+            wait(0.05)
+            VirtualInput:SendKeyEvent(false, spamKey, false, game)
+        end
+        wait(0.05)
+    end
+end)
+
+updateSpammerStatus()
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Blinker loaded",
+    Text = "Click Key Spammer to configure",
+    Duration = 5
+})
